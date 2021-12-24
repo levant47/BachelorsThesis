@@ -1,0 +1,39 @@
+nop
+00000000
+
+push <value>
+00000001
+
+pop
+00000010
+
+add
+00000011
+
+cmp
+00000100
+
+# TODO: conditional jump instructions should get the address to jump to from the stack
+jl <address>
+00000101
+
+jle <address>
+00000110
+
+jeq <address>
+00000111
+
+jge <address>
+00001000
+
+jg <address>
+00001001
+
+jne <address>
+00001010
+
+jmp <address>
+00001011
+
+dup
+00001100
