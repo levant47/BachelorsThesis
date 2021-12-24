@@ -37,3 +37,6 @@ jmp <address>
 
 dup
 00001100
+
+out
+00001101

@@ -13,6 +13,7 @@ enum AstNodeType
     AstNodeTypeJne,
     AstNodeTypeJmp,
     AstNodeTypeDup,
+    AstNodeTypeOut,
     AstNodeTypeLabel,
 };
 
@@ -75,6 +76,9 @@ struct AstNode
                 break;
             case AstNodeTypeDup:
                 printf("Dup");
+                break;
+            case AstNodeTypeOut:
+                printf("Out");
                 break;
             case AstNodeTypeLabel:
                 printf("Label ");
@@ -385,6 +389,21 @@ struct AstParsingState
         return true;
     }
 
+    bool parse_out()
+    {
+        if (token_index > tokens.size-2
+            || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "out"
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
+        {
+            return false;
+        }
+        AstNode out_node;
+        out_node.type = AstNodeTypeOut;
+        ast.push(out_node);
+        token_index += 2;
+        return true;
+    }
+
     bool parse_label()
     {
         if (token_index > tokens.size-3
@@ -448,6 +467,7 @@ AstParsingResult parse_ast(Tokens tokens)
                 || state.parse_jne()
                 || state.parse_jmp()
                 || state.parse_dup()
+                || state.parse_out()
                 || state.parse_label()
         )
         {

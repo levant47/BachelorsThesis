@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.cpp"
 #include "tokenizer.cpp"
@@ -29,9 +30,29 @@ String read_whole_file(const char* file_path)
     return contents;
 }
 
-int main(void)
+String get_program_directory_from_argv(char** argv)
 {
-    auto source = read_whole_file("samples/2.asm");
+    auto result = String::allocate(64);
+    result.push(argv[0]);
+    for (u64 i = 0; i < result.size; i++)
+    {
+        if (result.data[result.size-i-1] == '/')
+        {
+            result.size = result.size - i - 1;
+            return result;
+        }
+    }
+    panic("Failed to get program directory");
+    return result;
+}
+
+int main(s32 argc, char** argv)
+{
+    auto program_directory = get_program_directory_from_argv(argv);
+    auto source_path = program_directory.copy();
+    source_path.push("/samples/3.asm");
+    source_path.make_c_string();
+    auto source = read_whole_file(source_path.data);
 
     auto tokenization_result = tokenize(source);
     if (!tokenization_result.success)
@@ -47,7 +68,7 @@ int main(void)
 
     auto binary_result = compile_to_binary(ast_parsing_result.ast);
 
-    binary_result.print();
+    binary_result.print_vhdl();
 
     return 0;
 }

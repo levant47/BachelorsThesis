@@ -1,4 +1,11 @@
+# output files
 *.bin
 *.exe
 *.ghw
+
+# GHDL files
 *.cf
+
+# Vivado files
+*.cache
+*.runs

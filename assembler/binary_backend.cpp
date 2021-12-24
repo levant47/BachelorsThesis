@@ -32,6 +32,33 @@ struct BinaryResult
         push(byte2);
     }
 
+    void print_vhdl()
+    {
+        printf(
+            "package program is\n"
+            "    constant code : work.types.T_MEMORY := (\n"
+
+        );
+        for (u64 i = 0; i < size; i++)
+        {
+            char buffer[8];
+            for (u8 k = 0; k < 8; k++)
+            {
+                buffer[k] = ((data[i] >> (8-k-1)) & 1) + '0';
+            }
+            printf("        b\"%.8s\"", buffer);
+            if (i != size-1)
+            {
+                printf(",");
+            }
+            printf("\n");
+        }
+        printf(
+            "    );\n"
+            "end program;\n"
+        );
+    }
+
     // DEBUG
     void print()
     {
@@ -263,6 +290,9 @@ BinaryResult compile_to_binary(Ast ast)
             }
             case AstNodeTypeDup:
                 result.push(12);
+                break;
+            case AstNodeTypeOut:
+                result.push(13);
                 break;
             case AstNodeTypeLabel:
             {

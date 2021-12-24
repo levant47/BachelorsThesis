@@ -2,7 +2,8 @@ entity alu is
     port (
         clock : in BIT;
         instruction : in BIT_VECTOR(7 downto 0);
-        next_instruction_address : out BIT_VECTOR(7 downto 0)
+        next_instruction_address : out BIT_VECTOR(7 downto 0);
+        output_0 : out BIT
     );
 
     function add_bit_vector_8(
@@ -31,7 +32,11 @@ architecture alu_architecture of alu is
 
     signal is_awaiting_second_byte : BIT := '0';
     signal previous_instruction : BIT_VECTOR(7 downto 0) := "00000000";
+
+    signal output_0_register : BIT := '0';
 begin
+    output_0 <= output_0_register;
+
     process (clock) begin
         if clock'event and clock = '1' then
             instruction_register <= add_bit_vector_8(instruction_register, "00000001");
@@ -90,6 +95,12 @@ begin
                 elsif instruction = "00001100" then
                     stack(stack_index) <= stack(stack_index-1);
                     stack_index <= stack_index + 1;
+                -- out
+                elsif instruction = "00001101" then
+                    if stack(stack_index-2) = "00000000" then
+                        output_0_register <= stack(stack_index-1)(0);
+                    end if;
+                    stack_index <= stack_index - 2;
                 end if;
                 -- there is a definition for a no-op instruction,
                 -- but in the implementation everything that isn't a valid instruction

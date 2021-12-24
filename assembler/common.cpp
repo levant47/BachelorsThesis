@@ -35,6 +35,26 @@ struct String
         size++;
     }
 
+    void push(const char* string)
+    {
+        auto string_length = strlen(string);
+        if (string_length > capacity || size > capacity - string_length)
+        {
+            capacity = (capacity + string_length) * 2;
+            data = (char*)realloc(data, capacity);
+        }
+        for (u64 i = 0; i < string_length; i++)
+        {
+            data[size+i] = string[i];
+        }
+        size += string_length;
+    }
+
+    void make_c_string()
+    {
+        push('\0');
+    }
+
     String copy()
     {
         String result;

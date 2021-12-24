@@ -1,14 +1,15 @@
 entity cpu is
-    generic (code : work.types.T_MEMORY);
-
     port (
-        clock : in BIT
+        clock : in BIT;
+        output_0 : out BIT
     );
 end cpu;
 
 architecture cpu_architecture of cpu is
     signal instruction : BIT_VECTOR(7 downto 0);
     signal instruction_address : BIT_VECTOR(7 downto 0);
+
+    constant code : work.types.T_MEMORY := work.program.code;
 begin
     rom_instance : entity work.rom
         generic map (code => code)
@@ -20,6 +21,7 @@ begin
     alu_instance : entity work.alu port map (
         clock => clock,
         instruction => instruction,
-        next_instruction_address => instruction_address
+        next_instruction_address => instruction_address,
+        output_0 => output_0
     );
 end cpu_architecture;
