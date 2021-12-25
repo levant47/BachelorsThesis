@@ -1,6 +1,9 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
 entity cpu is
     port (
-        clock : in BIT;
+        clock : in STD_ULOGIC;
         output_0 : out BIT
     );
 end cpu;

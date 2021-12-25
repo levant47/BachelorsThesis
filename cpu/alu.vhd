@@ -1,6 +1,9 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+
 entity alu is
     port (
-        clock : in BIT;
+        clock : in STD_ULOGIC;
         instruction : in BIT_VECTOR(7 downto 0);
         next_instruction_address : out BIT_VECTOR(7 downto 0);
         output_0 : out BIT
@@ -35,10 +38,11 @@ architecture alu_architecture of alu is
 
     signal output_0_register : BIT := '0';
 begin
+    next_instruction_address <= instruction_register;
     output_0 <= output_0_register;
 
     process (clock) begin
-        if clock'event and clock = '1' then
+        if rising_edge(clock) then
             instruction_register <= add_bit_vector_8(instruction_register, "00000001");
 
             if is_awaiting_second_byte = '0' then
@@ -148,6 +152,4 @@ begin
             end if;
         end if;
     end process;
-
-    next_instruction_address <= instruction_register;
 end alu_architecture;
