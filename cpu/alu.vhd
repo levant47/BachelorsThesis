@@ -1,49 +1,36 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
 
 entity alu is
     port (
         clock : in STD_ULOGIC;
-        instruction : in BIT_VECTOR(7 downto 0);
-        next_instruction_address : out BIT_VECTOR(7 downto 0);
-        output_0 : out BIT
+        instruction : in STD_ULOGIC_VECTOR(7 downto 0);
+        next_instruction_address : out STD_ULOGIC_VECTOR(7 downto 0);
+        output_0 : out STD_ULOGIC
     );
-
-    function add_bit_vector_8(
-        left : bit_vector(7 downto 0);
-        right : bit_vector(7 downto 0)
-    ) return bit_vector is
-        variable result : bit_vector(7 downto 0) := b"0000_0000";
-        variable carry : bit := '0';
-    begin
-        for i in 0 to 7 loop
-            result(i) := left(i) xor right(i) xor carry;
-            carry := (left(i) and right(i)) or (left(i) and carry) or (right(i) and carry);
-        end loop;
-        return result;
-    end add_bit_vector_8;
 end alu;
 
 architecture alu_architecture of alu is
     type T_FLAGS_REGISTER is ('l', 'e', 'g');
     signal flags_register : T_FLAGS_REGISTER;
 
-    signal instruction_register : BIT_VECTOR(7 downto 0) := "00000000";
+    signal instruction_register : STD_ULOGIC_VECTOR(7 downto 0) := "00000000";
 
     signal stack : work.types.T_MEMORY(255 downto 0);
     signal stack_index : integer := 0;
 
-    signal is_awaiting_second_byte : BIT := '0';
-    signal previous_instruction : BIT_VECTOR(7 downto 0) := "00000000";
+    signal is_awaiting_second_byte : STD_ULOGIC := '0';
+    signal previous_instruction : STD_ULOGIC_VECTOR(7 downto 0) := "00000000";
 
-    signal output_0_register : BIT := '0';
+    signal output_0_register : STD_ULOGIC := '0';
 begin
     next_instruction_address <= instruction_register;
     output_0 <= output_0_register;
 
     process (clock) begin
         if rising_edge(clock) then
-            instruction_register <= add_bit_vector_8(instruction_register, "00000001");
+            instruction_register <= std_ulogic_vector(unsigned(instruction_register) + 1);
 
             if is_awaiting_second_byte = '0' then
                 -- push
@@ -55,7 +42,7 @@ begin
                     stack_index <= stack_index - 1;
                 -- add
                 elsif instruction = "00000011" then
-                    stack(stack_index-2) <= add_bit_vector_8(stack(stack_index-2), stack(stack_index-1));
+                    stack(stack_index-2) <= std_ulogic_vector(unsigned(stack(stack_index-2)) + unsigned(stack(stack_index-1)));
                     stack_index <= stack_index - 1;
                 -- cmp
                 elsif instruction = "00000100" then

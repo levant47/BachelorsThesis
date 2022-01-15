@@ -35,6 +35,8 @@ struct BinaryResult
     void print_vhdl()
     {
         printf(
+            "library IEEE;\n"
+            "use IEEE.std_logic_1164.all;\n"
             "package program is\n"
             "    constant code : work.types.T_MEMORY := (\n"
 
