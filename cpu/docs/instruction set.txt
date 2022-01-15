@@ -1,7 +1,7 @@
 nop
 00000000
 
-push <value>
+push <value>|<address>
 00000001
 
 pop
@@ -10,29 +10,30 @@ pop
 add
 00000011
 
+# TODO: should cmp push its result on the stack thus eliminating the need for a flag register?
 cmp
 00000100
 
-# TODO: conditional jump instructions should get the address to jump to from the stack
-jl <address>
+# TODO: add pseudo instructions that are versions of all of the jump instructions but with a parameter
+jl
 00000101
 
-jle <address>
+jle
 00000110
 
-jeq <address>
+jeq
 00000111
 
-jge <address>
+jge
 00001000
 
-jg <address>
+jg
 00001001
 
-jne <address>
+jne
 00001010
 
-jmp <address>
+jmp
 00001011
 
 dup
@@ -40,3 +41,9 @@ dup
 
 out
 00001101
+
+push_nothing # written in assembly as a `push` instruction without an argument
+00001110
+
+ddup # downward duplicate
+00001111

@@ -17,9 +17,18 @@ enum AstNodeType
     AstNodeTypeLabel,
 };
 
+enum PushNodeType
+{
+    PushNodeTypeInteger,
+    PushNodeTypeLabel,
+};
+
 struct AstNode
 {
     AstNodeType type;
+
+    // only for AstNodeTypePush
+    PushNodeType push_type;
     union
     {
         u8 integer;
@@ -35,7 +44,15 @@ struct AstNode
                 printf("Nop");
                 break;
             case AstNodeTypePush:
-                printf("Push %hhu", integer);
+                printf("Push ");
+                if (push_type == PushNodeTypeInteger)
+                {
+                    printf("%hhu", integer);
+                }
+                else // PushNodeTypeLabel
+                {
+                    label.print();
+                }
                 break;
             case AstNodeTypePop:
                 printf("Pop");
@@ -47,32 +64,25 @@ struct AstNode
                 printf("Cmp");
                 break;
             case AstNodeTypeJl:
-                printf("Jl ");
-                label.print();
+                printf("Jl");
                 break;
             case AstNodeTypeJle:
-                printf("Jle ");
-                label.print();
+                printf("Jle");
                 break;
             case AstNodeTypeJeq:
-                printf("Jeq ");
-                label.print();
+                printf("Jeq");
                 break;
             case AstNodeTypeJge:
-                printf("Jge ");
-                label.print();
+                printf("Jge");
                 break;
             case AstNodeTypeJg:
-                printf("Jg ");
-                label.print();
+                printf("Jg");
                 break;
             case AstNodeTypeJne:
-                printf("Jne ");
-                label.print();
+                printf("Jne");
                 break;
             case AstNodeTypeJmp:
-                printf("Jmp ");
-                label.print();
+                printf("Jmp");
                 break;
             case AstNodeTypeDup:
                 printf("Dup");
@@ -169,14 +179,27 @@ struct AstParsingState
     {
         if (token_index > tokens.size-3
             || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "push"
-            || tokens.data[token_index+1].type != TokenTypeInteger
+            || tokens.data[token_index+1].type != TokenTypeInteger && tokens.data[token_index+1].type != TokenTypeName
             || tokens.data[token_index+2].type != TokenTypeNewLine)
         {
             return false;
         }
         AstNode push_node;
         push_node.type = AstNodeTypePush;
-        push_node.integer = tokens.data[token_index+1].integer;
+        if (tokens.data[token_index+1].type == TokenTypeInteger)
+        {
+            push_node.push_type = PushNodeTypeInteger;
+            push_node.integer = tokens.data[token_index+1].integer;
+        }
+        else // TokenTypeName
+        {
+            push_node.push_type = PushNodeTypeLabel;
+            push_node.label = tokens.data[token_index+1].name.copy();
+            if (!registered_labels.contains(push_node.label))
+            {
+                labels_to_check.push(push_node.label);
+            }
+        }
         ast.push(push_node);
         token_index += 3;
         return true;
@@ -229,148 +252,106 @@ struct AstParsingState
 
     bool parse_jl()
     {
-        if (token_index > tokens.size-3
+        if (token_index > tokens.size-2
             || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "jl"
-            || tokens.data[token_index+1].type != TokenTypeName
-            || tokens.data[token_index+2].type != TokenTypeNewLine)
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
         {
             return false;
         }
         AstNode jl_node;
         jl_node.type = AstNodeTypeJl;
-        jl_node.label = tokens.data[token_index+1].name.copy();
         ast.push(jl_node);
-        if (!registered_labels.contains(jl_node.label))
-        {
-            labels_to_check.push(jl_node.label);
-        }
-        token_index += 3;
+        token_index += 2;
         return true;
     }
 
     bool parse_jle()
     {
-        if (token_index > tokens.size-3
+        if (token_index > tokens.size-2
             || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "jle"
-            || tokens.data[token_index+1].type != TokenTypeName
-            || tokens.data[token_index+2].type != TokenTypeNewLine)
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
         {
             return false;
         }
         AstNode jle_node;
         jle_node.type = AstNodeTypeJle;
-        jle_node.label = tokens.data[token_index+1].name.copy();
         ast.push(jle_node);
-        if (!registered_labels.contains(jle_node.label))
-        {
-            labels_to_check.push(jle_node.label);
-        }
-        token_index += 3;
+        token_index += 2;
         return true;
     }
 
     bool parse_jeq()
     {
-        if (token_index > tokens.size-3
+        if (token_index > tokens.size-2
             || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "jeq"
-            || tokens.data[token_index+1].type != TokenTypeName
-            || tokens.data[token_index+2].type != TokenTypeNewLine)
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
         {
             return false;
         }
         AstNode jeq_node;
         jeq_node.type = AstNodeTypeJeq;
-        jeq_node.label = tokens.data[token_index+1].name.copy();
         ast.push(jeq_node);
-        if (!registered_labels.contains(jeq_node.label))
-        {
-            labels_to_check.push(jeq_node.label);
-        }
-        token_index += 3;
+        token_index += 2;
         return true;
     }
 
     bool parse_jge()
     {
-        if (token_index > tokens.size-3
+        if (token_index > tokens.size-2
             || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "jge"
-            || tokens.data[token_index+1].type != TokenTypeName
-            || tokens.data[token_index+2].type != TokenTypeNewLine)
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
         {
             return false;
         }
         AstNode jge_node;
         jge_node.type = AstNodeTypeJge;
-        jge_node.label = tokens.data[token_index+1].name.copy();
         ast.push(jge_node);
-        if (!registered_labels.contains(jge_node.label))
-        {
-            labels_to_check.push(jge_node.label);
-        }
-        token_index += 3;
+        token_index += 2;
         return true;
     }
 
     bool parse_jg()
     {
-        if (token_index > tokens.size-3
+        if (token_index > tokens.size-2
             || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "jg"
-            || tokens.data[token_index+1].type != TokenTypeName
-            || tokens.data[token_index+2].type != TokenTypeNewLine)
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
         {
             return false;
         }
         AstNode jg_node;
         jg_node.type = AstNodeTypeJg;
-        jg_node.label = tokens.data[token_index+1].name.copy();
         ast.push(jg_node);
-        if (!registered_labels.contains(jg_node.label))
-        {
-            labels_to_check.push(jg_node.label);
-        }
-        token_index += 3;
+        token_index += 2;
         return true;
     }
 
     bool parse_jne()
     {
-        if (token_index > tokens.size-3
+        if (token_index > tokens.size-2
             || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "jne"
-            || tokens.data[token_index+1].type != TokenTypeName
-            || tokens.data[token_index+2].type != TokenTypeNewLine)
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
         {
             return false;
         }
         AstNode jne_node;
         jne_node.type = AstNodeTypeJne;
-        jne_node.label = tokens.data[token_index+1].name.copy();
         ast.push(jne_node);
-        if (!registered_labels.contains(jne_node.label))
-        {
-            labels_to_check.push(jne_node.label);
-        }
-        token_index += 3;
+        token_index += 2;
         return true;
     }
 
     bool parse_jmp()
     {
-        if (token_index > tokens.size-3
+        if (token_index > tokens.size-2
             || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "jmp"
-            || tokens.data[token_index+1].type != TokenTypeName
-            || tokens.data[token_index+2].type != TokenTypeNewLine)
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
         {
             return false;
         }
         AstNode jmp_node;
         jmp_node.type = AstNodeTypeJmp;
-        jmp_node.label = tokens.data[token_index+1].name.copy();
         ast.push(jmp_node);
-        if (!registered_labels.contains(jmp_node.label))
-        {
-            labels_to_check.push(jmp_node.label);
-        }
-        token_index += 3;
+        token_index += 2;
         return true;
     }
 

@@ -4,8 +4,10 @@ blink:
 dup
 push 1
 cmp
-jeq turn_on_led
-jmp turn_off_led
+push turn_on_led
+jeq
+push turn_off_led
+jmp
 
 turn_on_led:
 push 0
@@ -13,7 +15,8 @@ push 1
 out
 pop
 push 0
-jmp end_if
+push end_if
+jmp
 
 turn_off_led:
 push 0
@@ -29,37 +32,44 @@ loop_3:
 dup
 push 0
 cmp
-jeq loop_3_end
+push loop_3_end
+jeq
 
 push 100
 loop_2:
 dup
 push 0
 cmp
-jeq loop_2_end
+push loop_2_end
+jeq
 
 push 100
 loop_1:
 dup
 push 0
 cmp
-jeq loop_1_end
+push loop_1_end
+jeq
 push -1
 add
-jmp loop_1
+push loop_1
+jmp
 loop_1_end:
 pop
 
 push -1
 add
-jmp loop_2
+push loop_2
+jmp
 loop_2_end:
 pop
 
 push -1
 add
-jmp loop_3
+push loop_3
+jmp
 loop_3_end:
 pop
 
-jmp blink
+push blink
+jmp

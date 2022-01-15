@@ -153,8 +153,31 @@ BinaryResult compile_to_binary(Ast ast)
                 result.push(0);
                 break;
             case AstNodeTypePush:
-                result.push(1, ast.data[i].integer);
+            {
+                result.push(1);
+                if (ast.data[i].push_type == PushNodeTypeInteger)
+                {
+                    result.push(ast.data[i].integer);
+                }
+                else // PushNodeTypeLabel
+                {
+                    // TODO: this snippet needs to be extracted into its own method
+                    auto find_result = labels_map.find(ast.data[i].label);
+                    if (find_result.found)
+                    {
+                        result.push(find_result.address);
+                    }
+                    else
+                    {
+                        LabelAddress label_address;
+                        label_address.label = ast.data[i].label;
+                        label_address.address = result.size;
+                        labels_to_fix.push(label_address);
+                        result.push(0);
+                    }
+                }
                 break;
+            }
             case AstNodeTypePop:
                 result.push(2);
                 break;
@@ -165,131 +188,26 @@ BinaryResult compile_to_binary(Ast ast)
                 result.push(4);
                 break;
             case AstNodeTypeJl:
-            {
                 result.push(5);
-                auto find_result = labels_map.find(ast.data[i].label);
-                if (find_result.found)
-                {
-                    result.push(find_result.address);
-                }
-                else
-                {
-                    LabelAddress label_address;
-                    label_address.label = ast.data[i].label;
-                    label_address.address = result.size;
-                    labels_to_fix.push(label_address);
-                    result.push(0);
-                }
                 break;
-            }
             case AstNodeTypeJle:
-            {
                 result.push(6);
-                auto find_result = labels_map.find(ast.data[i].label);
-                if (find_result.found)
-                {
-                    result.push(find_result.address);
-                }
-                else
-                {
-                    LabelAddress label_address;
-                    label_address.label = ast.data[i].label;
-                    label_address.address = result.size;
-                    labels_to_fix.push(label_address);
-                    result.push(0);
-                }
                 break;
-            }
             case AstNodeTypeJeq:
-            {
                 result.push(7);
-                auto find_result = labels_map.find(ast.data[i].label);
-                if (find_result.found)
-                {
-                    result.push(find_result.address);
-                }
-                else
-                {
-                    LabelAddress label_address;
-                    label_address.label = ast.data[i].label;
-                    label_address.address = result.size;
-                    labels_to_fix.push(label_address);
-                    result.push(0);
-                }
                 break;
-            }
             case AstNodeTypeJge:
-            {
                 result.push(8);
-                auto find_result = labels_map.find(ast.data[i].label);
-                if (find_result.found)
-                {
-                    result.push(find_result.address);
-                }
-                else
-                {
-                    LabelAddress label_address;
-                    label_address.label = ast.data[i].label;
-                    label_address.address = result.size;
-                    labels_to_fix.push(label_address);
-                    result.push(0);
-                }
                 break;
-            }
             case AstNodeTypeJg:
-            {
                 result.push(9);
-                auto find_result = labels_map.find(ast.data[i].label);
-                if (find_result.found)
-                {
-                    result.push(find_result.address);
-                }
-                else
-                {
-                    LabelAddress label_address;
-                    label_address.label = ast.data[i].label;
-                    label_address.address = result.size;
-                    labels_to_fix.push(label_address);
-                    result.push(0);
-                }
                 break;
-            }
             case AstNodeTypeJne:
-            {
                 result.push(10);
-                auto find_result = labels_map.find(ast.data[i].label);
-                if (find_result.found)
-                {
-                    result.push(find_result.address);
-                }
-                else
-                {
-                    LabelAddress label_address;
-                    label_address.label = ast.data[i].label;
-                    label_address.address = result.size;
-                    labels_to_fix.push(label_address);
-                    result.push(0);
-                }
                 break;
-            }
             case AstNodeTypeJmp:
-            {
                 result.push(11);
-                auto find_result = labels_map.find(ast.data[i].label);
-                if (find_result.found)
-                {
-                    result.push(find_result.address);
-                }
-                else
-                {
-                    LabelAddress label_address;
-                    label_address.label = ast.data[i].label;
-                    label_address.address = result.size;
-                    labels_to_fix.push(label_address);
-                    result.push(0);
-                }
                 break;
-            }
             case AstNodeTypeDup:
                 result.push(12);
                 break;

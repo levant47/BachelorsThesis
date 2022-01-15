@@ -18,9 +18,11 @@ architecture alu_architecture of alu is
     signal instruction_register : STD_ULOGIC_VECTOR(7 downto 0) := "00000000";
 
     signal stack : work.types.T_MEMORY(255 downto 0);
+    -- TODO: rename to stack_size
     signal stack_index : integer := 0;
 
     signal is_awaiting_second_byte : STD_ULOGIC := '0';
+    -- TODO: rename to previous_byte
     signal previous_instruction : STD_ULOGIC_VECTOR(7 downto 0) := "00000000";
 
     signal output_0_register : STD_ULOGIC := '0';
@@ -56,32 +58,44 @@ begin
                     stack_index <= stack_index - 2;
                 -- jl
                 elsif instruction = "00000101" then
-                    is_awaiting_second_byte <= '1';
-                    previous_instruction <= instruction;
+                    if flags_register = 'l' then
+                        instruction_register <= stack(stack_index - 1);
+                    end if;
+                    stack_index <= stack_index - 1;
                 -- jle
                 elsif instruction = "00000110" then
-                    is_awaiting_second_byte <= '1';
-                    previous_instruction <= instruction;
+                    if flags_register = 'l' or flags_register = 'e' then
+                        instruction_register <= stack(stack_index - 1);
+                    end if;
+                    stack_index <= stack_index - 1;
                 -- jeq
                 elsif instruction = "00000111" then
-                    is_awaiting_second_byte <= '1';
-                    previous_instruction <= instruction;
+                    if flags_register = 'e' then
+                        instruction_register <= stack(stack_index - 1);
+                    end if;
+                    stack_index <= stack_index - 1;
                 -- jge
                 elsif instruction = "00001000" then
-                    is_awaiting_second_byte <= '1';
-                    previous_instruction <= instruction;
+                    if flags_register = 'e' or flags_register = 'g' then
+                        instruction_register <= stack(stack_index - 1);
+                    end if;
+                    stack_index <= stack_index - 1;
                 -- jg
                 elsif instruction = "00001001" then
-                    is_awaiting_second_byte <= '1';
-                    previous_instruction <= instruction;
+                    if flags_register = 'g' then
+                        instruction_register <= stack(stack_index - 1);
+                    end if;
+                    stack_index <= stack_index - 1;
                 -- jne
                 elsif instruction = "00001010" then
-                    is_awaiting_second_byte <= '1';
-                    previous_instruction <= instruction;
+                    if flags_register /= 'e' then
+                        instruction_register <= stack(stack_index - 1);
+                    end if;
+                    stack_index <= stack_index - 1;
                 -- jmp
                 elsif instruction = "00001011" then
-                    is_awaiting_second_byte <= '1';
-                    previous_instruction <= instruction;
+                    instruction_register <= stack(stack_index - 1);
+                    stack_index <= stack_index - 1;
                 -- dup
                 elsif instruction = "00001100" then
                     stack(stack_index) <= stack(stack_index-1);
@@ -101,39 +115,6 @@ begin
                 if previous_instruction = "00000001" then
                     stack(stack_index) <= instruction;
                     stack_index <= stack_index + 1;
-                -- jl
-                elsif previous_instruction = "00000101" then
-                    if flags_register = 'l' then
-                        instruction_register <= instruction;
-                    end if;
-                -- jle
-                elsif previous_instruction = "00000110" then
-                    if flags_register = 'l' or flags_register = 'e' then
-                        instruction_register <= instruction;
-                    end if;
-                -- jeq
-                elsif previous_instruction = "00000111" then
-                    if flags_register = 'e' then
-                        instruction_register <= instruction;
-                    end if;
-                -- jge
-                elsif previous_instruction = "00001000" then
-                    if flags_register = 'e' or flags_register = 'g' then
-                        instruction_register <= instruction;
-                    end if;
-                -- jg
-                elsif previous_instruction = "00001001" then
-                    if flags_register = 'g' then
-                        instruction_register <= instruction;
-                    end if;
-                -- jne
-                elsif previous_instruction = "00001010" then
-                    if flags_register /= 'e' then
-                        instruction_register <= instruction;
-                    end if;
-                -- jmp
-                elsif previous_instruction = "00001011" then
-                    instruction_register <= instruction;
                 end if;
                 is_awaiting_second_byte <= '0';
             end if;

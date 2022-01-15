@@ -3,11 +3,15 @@ loop:
 dup
 push 0
 cmp
-jeq end_loop
+push end_loop
+jeq
 push -1
 add
-jmp loop
+push loop
+jmp
 end_loop:
+pop
 
 halt:
-jmp halt
+push halt
+jmp

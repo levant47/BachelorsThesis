@@ -1,0 +1,26 @@
+so the programmer should be able to do the following (more or less):
+
+push 10
+push 5
+call add
+push 3
+call mul
+-- the stack should now have exactly one entry which is equal to 45
+
+function add:
+enter 0
+add
+leave 1
+
+add:
+pop
+add
+push
+push
+ddup
+jmp
+
+function mul:
+enter
+
+leave
