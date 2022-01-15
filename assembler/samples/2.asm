@@ -8,3 +8,6 @@ push -1
 add
 jmp loop
 end_loop:
+
+halt:
+jmp halt
