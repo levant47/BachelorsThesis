@@ -217,6 +217,9 @@ BinaryResult compile_to_binary(Ast ast)
             case AstNodeTypePushNothing:
                 result.push(14);
                 break;
+            case AstNodeTypeDdup:
+                result.push(15);
+                break;
             case AstNodeTypeLabel:
             {
                 LabelAddress label_address;

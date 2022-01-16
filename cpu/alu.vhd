@@ -109,6 +109,10 @@ begin
                 -- push_nothing
                 elsif instruction = "00001110" then
                     stack_index <= stack_index + 1;
+                -- ddup
+                elsif instruction = "00001111" then
+                    stack(stack_index-2) <= stack(stack_index-1);
+                    stack_index <= stack_index - 1;
                 end if;
                 -- there is a definition for a no-op instruction,
                 -- but in the implementation everything that isn't a valid instruction
