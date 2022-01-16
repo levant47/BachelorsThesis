@@ -17,7 +17,7 @@ architecture alu_architecture of alu is
 
     signal instruction_register : STD_ULOGIC_VECTOR(7 downto 0) := "00000000";
 
-    signal stack : work.types.T_MEMORY(255 downto 0);
+    signal stack : work.types.T_MEMORY(255 downto 0) := (others => "00000000");
     -- TODO: rename to stack_size
     signal stack_index : integer := 0;
 
@@ -106,6 +106,9 @@ begin
                         output_0_register <= stack(stack_index-1)(0);
                     end if;
                     stack_index <= stack_index - 2;
+                -- push_nothing
+                elsif instruction = "00001110" then
+                    stack_index <= stack_index + 1;
                 end if;
                 -- there is a definition for a no-op instruction,
                 -- but in the implementation everything that isn't a valid instruction

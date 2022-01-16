@@ -14,6 +14,7 @@ enum AstNodeType
     AstNodeTypeJmp,
     AstNodeTypeDup,
     AstNodeTypeOut,
+    AstNodeTypePushNothing,
     AstNodeTypeLabel,
 };
 
@@ -89,6 +90,9 @@ struct AstNode
                 break;
             case AstNodeTypeOut:
                 printf("Out");
+                break;
+            case AstNodeTypePushNothing:
+                printf("Push");
                 break;
             case AstNodeTypeLabel:
                 printf("Label ");
@@ -385,6 +389,21 @@ struct AstParsingState
         return true;
     }
 
+    bool parse_push_nothing()
+    {
+        if (token_index > tokens.size-2
+            || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "push"
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
+        {
+            return false;
+        }
+        AstNode push_nothing_node;
+        push_nothing_node.type = AstNodeTypePushNothing;
+        ast.push(push_nothing_node);
+        token_index += 2;
+        return true;
+    }
+
     bool parse_label()
     {
         if (token_index > tokens.size-3
@@ -449,6 +468,7 @@ AstParsingResult parse_ast(Tokens tokens)
                 || state.parse_jmp()
                 || state.parse_dup()
                 || state.parse_out()
+                || state.parse_push_nothing()
                 || state.parse_label()
         )
         {
