@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.numeric_std_unsigned.all;
 
 entity rom is
     generic (code : work.types.T_MEMORY);
@@ -13,9 +14,5 @@ end rom;
 
 architecture rom_architecture of rom is
 begin
-    output <= code(to_integer(unsigned(address)))
-        -- TODO: need this because address is undefined at the very first moment
-        -- of the simulation, no idea why; is there a proper solution to this?
-        when address /= "UUUUUUUU"
-        else (others => '0');
+    output <= code(to_integer(address));
 end rom_architecture;

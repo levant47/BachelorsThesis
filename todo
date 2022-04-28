@@ -1,5 +1,8 @@
-functions in assembly
-pseudo instructions
-comments in assembly
-reading code from an SD card
-how do we live without heap memory
+[/] functions in assembly
+[/] basic error reporting in assembler
+[/] comments in assembly
+[ ] function-local labels
+[ ] hex values as instruction parameters
+[ ] pseudo instructions
+[ ] reading code from an SD card
+[ ] how do we live without heap memory

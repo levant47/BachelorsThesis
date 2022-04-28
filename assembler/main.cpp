@@ -50,7 +50,7 @@ int main(s32 argc, char** argv)
 {
     auto program_directory = get_program_directory_from_argv(argv);
     auto source_path = program_directory.copy();
-    source_path.push("/samples/3.asm");
+    source_path.push("/samples/4.asm");
     source_path.make_c_string();
     auto source = read_whole_file(source_path.data);
 
@@ -63,7 +63,10 @@ int main(s32 argc, char** argv)
     auto ast_parsing_result = parse_ast(tokenization_result.tokens);
     if (!ast_parsing_result.success)
     {
-        panic("Parsing AST failed");
+        printf("Parsing AST failed: ");
+        ast_parsing_result.error.print();
+        printf("\n");
+        return 1;
     }
 
     auto binary_result = compile_to_binary(ast_parsing_result.ast);

@@ -47,3 +47,9 @@ push_nothing # written in assembly as a `push` instruction without an argument
 
 ddup # downward duplicate
 00001111
+
+store
+00010000
+
+load
+00010001

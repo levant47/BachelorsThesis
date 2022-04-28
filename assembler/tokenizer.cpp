@@ -9,6 +9,7 @@ enum TokenType
 struct Token
 {
     TokenType type;
+    u64 line;
     union
     {
         String name;
@@ -104,6 +105,7 @@ struct TokenizationState
 {
     String source;
     u64 source_index;
+    u64 line;
     Tokens tokens;
 
     bool skip_whitespace()
@@ -115,6 +117,22 @@ struct TokenizationState
             source_index++;
         }
         return result;
+    }
+
+    bool skip_comments()
+    {
+        if (source_index == source.size || source.data[source_index] != '#')
+        {
+            return false;
+        }
+        source_index++;
+
+        while (source_index != source.size && source.data[source_index] != '\n')
+        {
+            source_index++;
+        }
+
+        return true;
     }
 
     bool tokenize_name()
@@ -136,6 +154,7 @@ struct TokenizationState
 
         Token name_token;
         name_token.type = TokenTypeName;
+        name_token.line = line;
         name_token.name = name;
         tokens.push(name_token);
         return true;
@@ -169,6 +188,7 @@ struct TokenizationState
 
         Token integer_token;
         integer_token.type = TokenTypeInteger;
+        integer_token.line = line;
         integer_token.integer = integer;
         tokens.push(integer_token);
         return true;
@@ -180,16 +200,24 @@ struct TokenizationState
         {
             Token new_line_token;
             new_line_token.type = TokenTypeNewLine;
+            new_line_token.line = line;
             tokens.push(new_line_token);
             source_index++;
+
+            line++;
+
             return true;
         }
         if (source_index < source.size-1 && source.data[source_index] == '\r' && source.data[source_index+1] == '\n')
         {
             Token new_line_token;
             new_line_token.type = TokenTypeNewLine;
+            new_line_token.line = line;
             tokens.push(new_line_token);
             source_index += 2;
+
+            line++;
+
             return true;
         }
         return false;
@@ -203,6 +231,7 @@ struct TokenizationState
         }
         Token colon_token;
         colon_token.type = TokenTypeColon;
+        colon_token.line = line;
         tokens.push(colon_token);
         source_index++;
         return true;
@@ -220,12 +249,14 @@ TokenizationResult tokenize(String source)
     TokenizationState state;
     state.source = source;
     state.source_index = 0;
+    state.line = 1;
     state.tokens = Tokens::allocate();
 
     while (state.source_index != source.size)
     {
         if (
             state.skip_whitespace()
+                || state.skip_comments()
                 || state.tokenize_name()
                 || state.tokenize_integer()
                 || state.tokenize_newline()

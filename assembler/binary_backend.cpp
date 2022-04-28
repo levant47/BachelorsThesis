@@ -1,3 +1,25 @@
+enum InstructionOpCode : u8
+{
+    InstructionOpCodeNop = 0,
+    InstructionOpCodePush = 1,
+    InstructionOpCodePop = 2,
+    InstructionOpCodeAdd = 3,
+    InstructionOpCodeCmp = 4,
+    InstructionOpCodeJl = 5,
+    InstructionOpCodeJle = 6,
+    InstructionOpCodeJeq = 7,
+    InstructionOpCodeJge = 8,
+    InstructionOpCodeJg = 9,
+    InstructionOpCodeJne = 10,
+    InstructionOpCodeJmp = 11,
+    InstructionOpCodeDup = 12,
+    InstructionOpCodeOut = 13,
+    InstructionOpCodePushNothing = 14,
+    InstructionOpCodeDdup = 15,
+    InstructionOpCodeStore = 16,
+    InstructionOpCodeLoad = 17,
+};
+
 struct BinaryResult
 {
     u64 capacity;
@@ -150,11 +172,11 @@ BinaryResult compile_to_binary(Ast ast)
         switch (ast.data[i].type)
         {
             case AstNodeTypeNop:
-                result.push(0);
+                result.push(InstructionOpCodeNop);
                 break;
             case AstNodeTypePush:
             {
-                result.push(1);
+                result.push(InstructionOpCodePush);
                 if (ast.data[i].push_type == PushNodeTypeInteger)
                 {
                     result.push(ast.data[i].integer);
@@ -179,46 +201,65 @@ BinaryResult compile_to_binary(Ast ast)
                 break;
             }
             case AstNodeTypePop:
-                result.push(2);
+                result.push(InstructionOpCodePop);
                 break;
             case AstNodeTypeAdd:
-                result.push(3);
+                result.push(InstructionOpCodeAdd);
                 break;
             case AstNodeTypeCmp:
-                result.push(4);
+                result.push(InstructionOpCodeCmp);
                 break;
             case AstNodeTypeJl:
-                result.push(5);
+                result.push(InstructionOpCodeJl);
                 break;
             case AstNodeTypeJle:
-                result.push(6);
+                result.push(InstructionOpCodeJle);
                 break;
             case AstNodeTypeJeq:
-                result.push(7);
+                result.push(InstructionOpCodeJeq);
                 break;
             case AstNodeTypeJge:
-                result.push(8);
+                result.push(InstructionOpCodeJge);
                 break;
             case AstNodeTypeJg:
-                result.push(9);
+                result.push(InstructionOpCodeJg);
                 break;
             case AstNodeTypeJne:
-                result.push(10);
+                result.push(InstructionOpCodeJne);
                 break;
             case AstNodeTypeJmp:
-                result.push(11);
+                result.push(InstructionOpCodeJmp);
                 break;
             case AstNodeTypeDup:
-                result.push(12);
+                result.push(InstructionOpCodeDup);
                 break;
             case AstNodeTypeOut:
-                result.push(13);
+                result.push(InstructionOpCodeOut);
                 break;
             case AstNodeTypePushNothing:
-                result.push(14);
+                result.push(InstructionOpCodePushNothing);
                 break;
             case AstNodeTypeDdup:
-                result.push(15);
+                result.push(InstructionOpCodeDdup);
+                break;
+            case AstNodeTypeStore:
+                result.push(InstructionOpCodeStore);
+                break;
+            case AstNodeTypeLoad:
+                result.push(InstructionOpCodeLoad);
+                break;
+            case AstNodeTypeCall: // call is a short hand for push-store-jmp
+            {
+                auto address_after_call = result.size + 4; // 4 is size of push-store-jmp instructions
+                result.push(InstructionOpCodePush);
+                result.push(address_after_call);
+                result.push(InstructionOpCodeStore);
+                result.push(InstructionOpCodeJmp);
+                break;
+            }
+            case AstNodeTypeRet: // ret is a short hand for load-jmp
+                result.push(InstructionOpCodeLoad);
+                result.push(InstructionOpCodeJmp);
                 break;
             case AstNodeTypeLabel:
             {

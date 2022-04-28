@@ -16,6 +16,10 @@ enum AstNodeType
     AstNodeTypeOut,
     AstNodeTypePushNothing,
     AstNodeTypeDdup,
+    AstNodeTypeStore,
+    AstNodeTypeLoad,
+    AstNodeTypeCall,
+    AstNodeTypeRet,
     AstNodeTypeLabel,
 };
 
@@ -98,6 +102,18 @@ struct AstNode
             case AstNodeTypeDdup:
                 printf("Ddup");
                 break;
+            case AstNodeTypeStore:
+                printf("Store");
+                break;
+            case AstNodeTypeLoad:
+                printf("Load");
+                break;
+            case AstNodeTypeCall:
+                printf("Call");
+                break;
+            case AstNodeTypeRet:
+                printf("Ret");
+                break;
             case AstNodeTypeLabel:
                 printf("Label ");
                 label.print();
@@ -147,6 +163,12 @@ struct Ast
         }
         printf("\n");
     }
+};
+
+struct CheckLabelsResult
+{
+    bool all_good;
+    String missing_label;
 };
 
 struct AstParsingState
@@ -423,6 +445,66 @@ struct AstParsingState
         return true;
     }
 
+    bool parse_store()
+    {
+        if (token_index > tokens.size-2
+            || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "store"
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
+        {
+            return false;
+        }
+        AstNode store_node;
+        store_node.type = AstNodeTypeStore;
+        ast.push(store_node);
+        token_index += 2;
+        return true;
+    }
+
+    bool parse_load()
+    {
+        if (token_index > tokens.size-2
+            || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "load"
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
+        {
+            return false;
+        }
+        AstNode load_node;
+        load_node.type = AstNodeTypeLoad;
+        ast.push(load_node);
+        token_index += 2;
+        return true;
+    }
+
+    bool parse_call()
+    {
+        if (token_index > tokens.size-2
+            || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "call"
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
+        {
+            return false;
+        }
+        AstNode call_node;
+        call_node.type = AstNodeTypeCall;
+        ast.push(call_node);
+        token_index += 2;
+        return true;
+    }
+
+    bool parse_ret()
+    {
+        if (token_index > tokens.size-2
+            || tokens.data[token_index].type != TokenTypeName || tokens.data[token_index].name != "ret"
+            || tokens.data[token_index+1].type != TokenTypeNewLine)
+        {
+            return false;
+        }
+        AstNode ret_node;
+        ret_node.type = AstNodeTypeRet;
+        ast.push(ret_node);
+        token_index += 2;
+        return true;
+    }
+
     bool parse_label()
     {
         if (token_index > tokens.size-3
@@ -441,16 +523,21 @@ struct AstParsingState
         return true;
     }
 
-    bool check_labels()
+    CheckLabelsResult check_labels()
     {
         for (u64 i = 0; i < labels_to_check.size; i++)
         {
             if (!registered_labels.contains(labels_to_check.data[i]))
             {
-                return false;
+                CheckLabelsResult result;
+                result.all_good = false;
+                result.missing_label = labels_to_check.data[i];
+                return result;
             }
         }
-        return true;
+        CheckLabelsResult result;
+        result.all_good = true;
+        return result;
     }
 };
 
@@ -458,6 +545,7 @@ struct AstParsingResult
 {
     bool success;
     Ast ast;
+    String error;
 };
 
 AstParsingResult parse_ast(Tokens tokens)
@@ -489,6 +577,10 @@ AstParsingResult parse_ast(Tokens tokens)
                 || state.parse_out()
                 || state.parse_push_nothing()
                 || state.parse_ddup()
+                || state.parse_store()
+                || state.parse_load()
+                || state.parse_call()
+                || state.parse_ret()
                 || state.parse_label()
         )
         {
@@ -497,13 +589,20 @@ AstParsingResult parse_ast(Tokens tokens)
 
         AstParsingResult result;
         result.success = false;
+        result.error = String::allocate();
+        result.error.push("Expected a valid instruction on line ");
+        result.error.push(state.tokens.data[state.token_index].line);
         return result;
     }
 
-    if (!state.check_labels())
+    auto check_labels_result = state.check_labels();
+    if (!check_labels_result.all_good)
     {
         AstParsingResult result;
         result.success = false;
+        result.error = String::allocate();
+        result.error.push("Missing label: ");
+        result.error.push(check_labels_result.missing_label);
         return result;
     }
 

@@ -7,6 +7,27 @@ typedef int32_t s32;
 typedef int16_t s16;
 typedef int8_t s8;
 
+u64 int_to_string(char* buffer, u64 value)
+{
+    u64 size = 0;
+    do
+    {
+        buffer[size] = value % 10 + '0';
+        value /= 10;
+        size++;
+    }
+    while (value != 0);
+
+    for (u64 i = 0; i < size / 2; i++)
+    {
+        auto temp = buffer[i];
+        buffer[i] = buffer[size - i - 1];
+        buffer[size - i - 1] = temp;
+    }
+
+    return size;
+}
+
 struct String
 {
     u64 capacity;
@@ -48,6 +69,23 @@ struct String
             data[size+i] = string[i];
         }
         size += string_length;
+    }
+
+    // TODO: better implementation
+    void push(String string)
+    {
+        for (u64 i = 0; i < string.size; i++)
+        {
+            push(string.data[i]);
+        }
+    }
+
+    void push(u64 number)
+    {
+        char buffer[21];
+        auto digits = int_to_string(buffer, number);
+        buffer[digits] = '\0';
+        push(buffer);
     }
 
     void make_c_string()
