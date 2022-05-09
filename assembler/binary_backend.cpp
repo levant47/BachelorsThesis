@@ -20,11 +20,18 @@ enum InstructionOpCode : u8
     InstructionOpCodeLoad = 17,
 };
 
+struct BinaryResultEntry
+{
+    u8 value;
+    bool has_comment;
+    String comment;
+};
+
 struct BinaryResult
 {
     u64 capacity;
     u64 size;
-    u8* data;
+    BinaryResultEntry* data;
 
     static const u64 DEFAULT_CAPACITY = 256;
 
@@ -33,7 +40,7 @@ struct BinaryResult
         BinaryResult result;
         result.capacity = DEFAULT_CAPACITY;
         result.size = 0;
-        result.data = (u8*)malloc(result.capacity);
+        result.data = (BinaryResultEntry*)malloc(result.capacity * sizeof(BinaryResultEntry));
         return result;
     }
 
@@ -42,10 +49,17 @@ struct BinaryResult
         if (size == capacity)
         {
             capacity *= 2;
-            data = (u8*)realloc(data, capacity);
+            data = (BinaryResultEntry*)realloc(data, capacity);
         }
-        data[size] = byte;
+        data[size].value = byte;
         size++;
+    }
+
+    void push(u8 byte, String comment)
+    {
+        push(byte);
+        data[size-1].has_comment = true;
+        data[size-1].comment = comment;
     }
 
     void push(u8 byte1, u8 byte2)
@@ -68,12 +82,17 @@ struct BinaryResult
             char buffer[8];
             for (u8 k = 0; k < 8; k++)
             {
-                buffer[k] = ((data[i] >> (8-k-1)) & 1) + '0';
+                buffer[k] = ((data[i].value >> (8-k-1)) & 1) + '0';
             }
             printf("        b\"%.8s\"", buffer);
             if (i != size-1)
             {
                 printf(",");
+            }
+            if (data[i].has_comment)
+            {
+                printf(" -- ");
+                data[i].comment.print();
             }
             printf("\n");
         }
@@ -91,7 +110,7 @@ struct BinaryResult
             char buffer[8];
             for (u8 k = 0; k < 8; k++)
             {
-                buffer[k] = ((data[i] >> (8-k-1)) & 1) + '0';
+                buffer[k] = ((data[i].value >> (8-k-1)) & 1) + '0';
             }
             printf("%.8s\n", buffer);
         }
@@ -169,14 +188,18 @@ BinaryResult compile_to_binary(Ast ast)
 
     for (u64 i = 0; i < ast.size; i++)
     {
+        auto comment = ast.data[i].to_string();
+        comment.push(" (line ");
+        comment.push(ast.data[i].line);
+        comment.push(")");
         switch (ast.data[i].type)
         {
             case AstNodeTypeNop:
-                result.push(InstructionOpCodeNop);
+                result.push(InstructionOpCodeNop, comment);
                 break;
             case AstNodeTypePush:
             {
-                result.push(InstructionOpCodePush);
+                result.push(InstructionOpCodePush, comment);
                 if (ast.data[i].push_type == PushNodeTypeInteger)
                 {
                     result.push(ast.data[i].integer);
@@ -201,64 +224,64 @@ BinaryResult compile_to_binary(Ast ast)
                 break;
             }
             case AstNodeTypePop:
-                result.push(InstructionOpCodePop);
+                result.push(InstructionOpCodePop, comment);
                 break;
             case AstNodeTypeAdd:
-                result.push(InstructionOpCodeAdd);
+                result.push(InstructionOpCodeAdd, comment);
                 break;
             case AstNodeTypeCmp:
-                result.push(InstructionOpCodeCmp);
+                result.push(InstructionOpCodeCmp, comment);
                 break;
             case AstNodeTypeJl:
-                result.push(InstructionOpCodeJl);
+                result.push(InstructionOpCodeJl, comment);
                 break;
             case AstNodeTypeJle:
-                result.push(InstructionOpCodeJle);
+                result.push(InstructionOpCodeJle, comment);
                 break;
             case AstNodeTypeJeq:
-                result.push(InstructionOpCodeJeq);
+                result.push(InstructionOpCodeJeq, comment);
                 break;
             case AstNodeTypeJge:
-                result.push(InstructionOpCodeJge);
+                result.push(InstructionOpCodeJge, comment);
                 break;
             case AstNodeTypeJg:
-                result.push(InstructionOpCodeJg);
+                result.push(InstructionOpCodeJg, comment);
                 break;
             case AstNodeTypeJne:
-                result.push(InstructionOpCodeJne);
+                result.push(InstructionOpCodeJne, comment);
                 break;
             case AstNodeTypeJmp:
-                result.push(InstructionOpCodeJmp);
+                result.push(InstructionOpCodeJmp, comment);
                 break;
             case AstNodeTypeDup:
-                result.push(InstructionOpCodeDup);
+                result.push(InstructionOpCodeDup, comment);
                 break;
             case AstNodeTypeOut:
-                result.push(InstructionOpCodeOut);
+                result.push(InstructionOpCodeOut, comment);
                 break;
             case AstNodeTypePushNothing:
-                result.push(InstructionOpCodePushNothing);
+                result.push(InstructionOpCodePushNothing, comment);
                 break;
             case AstNodeTypeDdup:
-                result.push(InstructionOpCodeDdup);
+                result.push(InstructionOpCodeDdup, comment);
                 break;
             case AstNodeTypeStore:
-                result.push(InstructionOpCodeStore);
+                result.push(InstructionOpCodeStore, comment);
                 break;
             case AstNodeTypeLoad:
-                result.push(InstructionOpCodeLoad);
+                result.push(InstructionOpCodeLoad, comment);
                 break;
             case AstNodeTypeCall: // call is a short hand for push-store-jmp
             {
                 auto address_after_call = result.size + 4; // 4 is size of push-store-jmp instructions
-                result.push(InstructionOpCodePush);
+                result.push(InstructionOpCodePush, comment);
                 result.push(address_after_call);
                 result.push(InstructionOpCodeStore);
                 result.push(InstructionOpCodeJmp);
                 break;
             }
             case AstNodeTypeRet: // ret is a short hand for load-jmp
-                result.push(InstructionOpCodeLoad);
+                result.push(InstructionOpCodeLoad, comment);
                 result.push(InstructionOpCodeJmp);
                 break;
             case AstNodeTypeLabel:
@@ -279,7 +302,7 @@ BinaryResult compile_to_binary(Ast ast)
         {
             panic("Failed to find a label");
         }
-        result.data[labels_to_fix.data[i].address] = find_result.address;
+        result.data[labels_to_fix.data[i].address].value = find_result.address;
     }
 
     labels_map.deallocate();

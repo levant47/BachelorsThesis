@@ -32,6 +32,7 @@ enum PushNodeType
 struct AstNode
 {
     AstNodeType type;
+    u64 line;
 
     // only for AstNodeTypePush
     PushNodeType push_type;
@@ -41,84 +42,88 @@ struct AstNode
         String label;
     };
 
-    // DEBUG
-    void print()
+    String to_string()
     {
+        auto result = String::allocate();
         switch (type)
         {
             case AstNodeTypeNop:
-                printf("Nop");
+                result.push("nop");
                 break;
             case AstNodeTypePush:
-                printf("Push ");
+                result.push("push ");
                 if (push_type == PushNodeTypeInteger)
                 {
-                    printf("%hhu", integer);
+                    char buffer[20];
+                    auto digits = int_to_string(buffer, integer);
+                    for (u64 i = 0; i < digits; i++)
+                    {
+                        result.push(buffer[i]);
+                    }
                 }
                 else // PushNodeTypeLabel
                 {
-                    label.print();
+                    result.push(label);
                 }
                 break;
             case AstNodeTypePop:
-                printf("Pop");
+                result.push("pop");
                 break;
             case AstNodeTypeAdd:
-                printf("Add");
+                result.push("add");
                 break;
             case AstNodeTypeCmp:
-                printf("Cmp");
+                result.push("cmp");
                 break;
             case AstNodeTypeJl:
-                printf("Jl");
+                result.push("jl");
                 break;
             case AstNodeTypeJle:
-                printf("Jle");
+                result.push("jle");
                 break;
             case AstNodeTypeJeq:
-                printf("Jeq");
+                result.push("jeq");
                 break;
             case AstNodeTypeJge:
-                printf("Jge");
+                result.push("jge");
                 break;
             case AstNodeTypeJg:
-                printf("Jg");
+                result.push("jg");
                 break;
             case AstNodeTypeJne:
-                printf("Jne");
+                result.push("jne");
                 break;
             case AstNodeTypeJmp:
-                printf("Jmp");
+                result.push("jmp");
                 break;
             case AstNodeTypeDup:
-                printf("Dup");
+                result.push("dup");
                 break;
             case AstNodeTypeOut:
-                printf("Out");
+                result.push("out");
                 break;
             case AstNodeTypePushNothing:
-                printf("Push");
+                result.push("push");
                 break;
             case AstNodeTypeDdup:
-                printf("Ddup");
+                result.push("ddup");
                 break;
             case AstNodeTypeStore:
-                printf("Store");
+                result.push("store");
                 break;
             case AstNodeTypeLoad:
-                printf("Load");
+                result.push("load");
                 break;
             case AstNodeTypeCall:
-                printf("Call");
+                result.push("call");
                 break;
             case AstNodeTypeRet:
-                printf("Ret");
+                result.push("ret");
                 break;
             case AstNodeTypeLabel:
-                printf("Label ");
-                label.print();
                 break;
         }
+        return result;
     }
 };
 
@@ -148,20 +153,6 @@ struct Ast
         }
         data[size] = node;
         size++;
-    }
-
-    // DEBUG
-    void print()
-    {
-        for (u64 i = 0; i < size; i++)
-        {
-            data[i].print();
-            if (i != size-1)
-            {
-                printf(", ");
-            }
-        }
-        printf("\n");
     }
 };
 
@@ -200,6 +191,7 @@ struct AstParsingState
         }
         AstNode nop_node;
         nop_node.type = AstNodeTypeNop;
+        nop_node.line = tokens.data[token_index].line;
         ast.push(nop_node);
         token_index += 2;
         return true;
@@ -216,6 +208,7 @@ struct AstParsingState
         }
         AstNode push_node;
         push_node.type = AstNodeTypePush;
+        push_node.line = tokens.data[token_index].line;
         if (tokens.data[token_index+1].type == TokenTypeInteger)
         {
             push_node.push_type = PushNodeTypeInteger;
@@ -245,6 +238,7 @@ struct AstParsingState
         }
         AstNode pop_node;
         pop_node.type = AstNodeTypePop;
+        pop_node.line = tokens.data[token_index].line;
         ast.push(pop_node);
         token_index += 2;
         return true;
@@ -260,6 +254,7 @@ struct AstParsingState
         }
         AstNode add_node;
         add_node.type = AstNodeTypeAdd;
+        add_node.line = tokens.data[token_index].line;
         ast.push(add_node);
         token_index += 2;
         return true;
@@ -275,6 +270,7 @@ struct AstParsingState
         }
         AstNode cmp_node;
         cmp_node.type = AstNodeTypeCmp;
+        cmp_node.line = tokens.data[token_index].line;
         ast.push(cmp_node);
         token_index += 2;
         return true;
@@ -290,6 +286,7 @@ struct AstParsingState
         }
         AstNode jl_node;
         jl_node.type = AstNodeTypeJl;
+        jl_node.line = tokens.data[token_index].line;
         ast.push(jl_node);
         token_index += 2;
         return true;
@@ -305,6 +302,7 @@ struct AstParsingState
         }
         AstNode jle_node;
         jle_node.type = AstNodeTypeJle;
+        jle_node.line = tokens.data[token_index].line;
         ast.push(jle_node);
         token_index += 2;
         return true;
@@ -320,6 +318,7 @@ struct AstParsingState
         }
         AstNode jeq_node;
         jeq_node.type = AstNodeTypeJeq;
+        jeq_node.line = tokens.data[token_index].line;
         ast.push(jeq_node);
         token_index += 2;
         return true;
@@ -335,6 +334,7 @@ struct AstParsingState
         }
         AstNode jge_node;
         jge_node.type = AstNodeTypeJge;
+        jge_node.line = tokens.data[token_index].line;
         ast.push(jge_node);
         token_index += 2;
         return true;
@@ -350,6 +350,7 @@ struct AstParsingState
         }
         AstNode jg_node;
         jg_node.type = AstNodeTypeJg;
+        jg_node.line = tokens.data[token_index].line;
         ast.push(jg_node);
         token_index += 2;
         return true;
@@ -365,6 +366,7 @@ struct AstParsingState
         }
         AstNode jne_node;
         jne_node.type = AstNodeTypeJne;
+        jne_node.line = tokens.data[token_index].line;
         ast.push(jne_node);
         token_index += 2;
         return true;
@@ -380,6 +382,7 @@ struct AstParsingState
         }
         AstNode jmp_node;
         jmp_node.type = AstNodeTypeJmp;
+        jmp_node.line = tokens.data[token_index].line;
         ast.push(jmp_node);
         token_index += 2;
         return true;
@@ -395,6 +398,7 @@ struct AstParsingState
         }
         AstNode dup_node;
         dup_node.type = AstNodeTypeDup;
+        dup_node.line = tokens.data[token_index].line;
         ast.push(dup_node);
         token_index += 2;
         return true;
@@ -410,6 +414,7 @@ struct AstParsingState
         }
         AstNode out_node;
         out_node.type = AstNodeTypeOut;
+        out_node.line = tokens.data[token_index].line;
         ast.push(out_node);
         token_index += 2;
         return true;
@@ -425,6 +430,7 @@ struct AstParsingState
         }
         AstNode push_nothing_node;
         push_nothing_node.type = AstNodeTypePushNothing;
+        push_nothing_node.line = tokens.data[token_index].line;
         ast.push(push_nothing_node);
         token_index += 2;
         return true;
@@ -440,6 +446,7 @@ struct AstParsingState
         }
         AstNode ddup_node;
         ddup_node.type = AstNodeTypeDdup;
+        ddup_node.line = tokens.data[token_index].line;
         ast.push(ddup_node);
         token_index += 2;
         return true;
@@ -455,6 +462,7 @@ struct AstParsingState
         }
         AstNode store_node;
         store_node.type = AstNodeTypeStore;
+        store_node.line = tokens.data[token_index].line;
         ast.push(store_node);
         token_index += 2;
         return true;
@@ -470,6 +478,7 @@ struct AstParsingState
         }
         AstNode load_node;
         load_node.type = AstNodeTypeLoad;
+        load_node.line = tokens.data[token_index].line;
         ast.push(load_node);
         token_index += 2;
         return true;
@@ -485,6 +494,7 @@ struct AstParsingState
         }
         AstNode call_node;
         call_node.type = AstNodeTypeCall;
+        call_node.line = tokens.data[token_index].line;
         ast.push(call_node);
         token_index += 2;
         return true;
@@ -500,6 +510,7 @@ struct AstParsingState
         }
         AstNode ret_node;
         ret_node.type = AstNodeTypeRet;
+        ret_node.line = tokens.data[token_index].line;
         ast.push(ret_node);
         token_index += 2;
         return true;
@@ -516,6 +527,7 @@ struct AstParsingState
         }
         AstNode label_node;
         label_node.type = AstNodeTypeLabel;
+        label_node.line = tokens.data[token_index].line;
         label_node.label = tokens.data[token_index].name.copy();
         ast.push(label_node);
         registered_labels.push(label_node.label);
